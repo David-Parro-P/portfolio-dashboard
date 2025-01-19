@@ -1,0 +1,57 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    user: "node"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - NODE_ENV=production
+      - N8N_PATH_DATA=/home/node/.n8n
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    ports:
+      - "5678:5678"
+    volumes:
+      - ./data/.n8n:/home/node/.n8n
+    restart: unless-stopped
+    networks:
+      - statement-network
+
+  processor:
+    build:
+      context: ./processor
+    volumes:
+      - ./data/db:/app/db:rw
+      - ./output:/app/output:rw 
+    environment:
+      - DB_PATH=/app/db/statements.db
+      - OUTPUT_DIR=/app/output
+      - FLASK_ENV=production
+      - FLASK_APP=src/app.py
+      - PYTHONPATH=/app/src
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - statement-network
+
+  grafana:
+    build:
+      context: ./grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/db:/var/lib/grafana/db:ro
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+    - GF_AUTH_ANONYMOUS_ENABLED=false
+    - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+    - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    networks:
+      - statement-network
+
+networks:
+  statement-network:
+    driver: bridge

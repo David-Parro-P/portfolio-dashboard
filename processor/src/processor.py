@@ -3,13 +3,11 @@ Interactive Brokers statement processor module.
 This module handles the processing of IB statements and exports the processed data.
 """
 import os
-from datetime import date, datetime
+from datetime import datetime
 import pandas as pd
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, Tuple
 
-from .constants import (
-    PREFIX,
-    DEFAULT_OUTPUT_DIR,
+from constants import (
     MTM_SUMMARY_KEY,
     TRADES_KEY,
     ASSET_CATEGORY_COL,
@@ -21,18 +19,18 @@ from .constants import (
     DEFAULT_STRIKE,
     DEFAULT_CONTRACT_TYPE,
     OPTIONS_CONTRACT_MULTIPLIER,
-    MASTER_DATES_FILE,
     DF_EXPORT_MAPPING,
     ASSET_CATEGORY_REPLACE
 )
-from .utils.file_operations import split_ib_statement, validate_input_file
-from .utils.df_operations import (
+from utils.file_operations import split_ib_statement, validate_input_file
+from utils.df_operations import (
     clean_column_names,
     post_process_df,
     parse_option_symbol,
     auto_convert_types,
     create_base_tables
 )
+from utils.db_operations import DatabaseManager
 
 class IBStatementProcessor:
     def __init__(self, input_file: str):
@@ -219,24 +217,31 @@ class IBStatementProcessor:
                 df[DATA_DATE_PART_COL] = self.part_date
     
     def export(self) -> None:
-        """Export processed data to CSV files."""
+        """Export processed data to SQLite database."""
+        
+        
+        # Initialize database connection
+        db_manager = DatabaseManager(os.getenv('DB_PATH', '/app/db/statements.db'))
+        
         # Export main dataframes
         for key, df in self.export_data.items():
             if not df.empty:
-                filepath = os.path.join(PREFIX, f"{key}.csv")
-                if os.path.exists(filepath):
-                    df.to_csv(filepath, mode='a', header=False, index=False)
-                else:
-                    df.to_csv(filepath, mode='w', header=True, index=False)
+                # Convert DataFrame column types appropriately if needed
+                # Ensure date columns are in correct format
+                if 'data_date' in df.columns:
+                    df['data_date'] = pd.to_datetime(df['data_date'])
+                
+                # Export to SQLite
+                db_manager.dataframe_to_sql(df, key)
         
         # Export master dates
         df_date = pd.DataFrame([[self.part_date]], columns=[DATA_DATE_PART_COL])
-        master_dates_path = os.path.join(PREFIX, MASTER_DATES_FILE)
-        
-        if os.path.exists(master_dates_path):
-            df_date.to_csv(master_dates_path, mode='a', header=False, index=False)
-        else:
-            df_date.to_csv(master_dates_path, mode='w', header=True, index=False)
+        db_manager.dataframe_to_sql(df_date, 'master_dates')
+
+        # Export metrics to a metrics table
+        metrics_df = pd.DataFrame([self.metrics])
+        metrics_df['data_date'] = self.part_date
+        db_manager.dataframe_to_sql(metrics_df, 'metrics')
     
     def get_metrics(self) -> Dict:
         """Return calculated metrics."""

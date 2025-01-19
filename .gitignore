@@ -173,3 +173,11 @@ cython_debug/
 # experiments
 *.ipynb
 output/
+# Ignore everything in data directory
+data/*
+data/db/*
+
+#eep the directories and .gitkeep files
+!data/
+!data/db/
+!data/db/.gitkeep

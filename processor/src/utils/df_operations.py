@@ -1,7 +1,7 @@
 """DataFrame processing utilities for IB statement processing."""
 import pandas as pd
 from typing import Tuple
-from ..constants import (
+from constants import (
     DATE_FORMATS,
     SYMBOL_COL,
 )

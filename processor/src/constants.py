@@ -1,4 +1,5 @@
 from typing import Dict
+import os
 
 # File paths and directories
 PREFIX = "/mnt/c/Users/David/Downloads/output"
@@ -54,3 +55,5 @@ MASTER_DATES_FILE = "master_dates.csv"
 
 # Options contract multiplier
 OPTIONS_CONTRACT_MULTIPLIER = 100
+
+DB_PATH = os.getenv('DB_PATH', '/app/db/statements.db')
