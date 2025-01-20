@@ -9,4 +9,4 @@ RUN poetry install --no-root
 ENV PYTHONPATH=/app/src
 COPY . .
 EXPOSE 5000
-CMD ["poetry", "run", "python", "src/app.py"]
+CMD ["python", "src/app.py"]

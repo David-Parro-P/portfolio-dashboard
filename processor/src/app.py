@@ -1,19 +1,15 @@
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify
 from pathlib import Path
 from processor import process_statement
 from models.api_models import StatementRequest, StatementResponse, HealthResponse
 from typing import Dict, Tuple, Any, Generator
 from functools import wraps
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from pydantic_settings import BaseSettings
-
 import tempfile
 from contextlib import contextmanager
 from datetime import datetime
 from pydantic import ValidationError
 import logging
-import uuid
 import signal
 import atexit
 
@@ -23,8 +19,6 @@ class Settings(BaseSettings):
     PORT: int = 5000
     SERVICE_NAME: str = "ibkr-processor"
     LOG_LEVEL: str = "INFO"
-    RATE_LIMIT_DAY: str = "200 per day"
-    RATE_LIMIT_HOUR: str = "50 per hour"
 
     class Config:
         env_file = ".env"
@@ -32,20 +26,13 @@ class Settings(BaseSettings):
 
 settings = Settings()
 app = Flask(__name__)
-
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=[settings.RATE_LIMIT_DAY, settings.RATE_LIMIT_HOUR],
-)
-
 logger = logging.getLogger(__name__)
 
 
 def setup_logging():
     """Configure application logging"""
     logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] %(message)s",
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=getattr(logging, settings.LOG_LEVEL),
     )
 
@@ -56,8 +43,7 @@ def create_error_response(message: str, status_code: int) -> Tuple[Dict[str, Any
         jsonify(
             {
                 "error": message,
-                "timestamp": datetime.now(datetime.timezone.utc).isoformat(),
-                "request_id": getattr(g, "request_id", str(uuid.uuid4())),
+                "timestamp": datetime.utcnow(),
             }
         ),
         status_code,
@@ -93,7 +79,6 @@ def parse_date_from_subject(subject: str) -> str:
         date_str = subject.split(" ")[-1].strip()
         parsed_date = datetime.strptime(date_str, "%m/%d/%Y")
         return parsed_date.strftime("%Y%m%d")
-
     except (ValueError, IndexError) as e:
         logger.error(f"Failed to parse date from subject: {subject}")
         raise ValueError(
@@ -101,12 +86,8 @@ def parse_date_from_subject(subject: str) -> str:
         ) from e
 
 
-def handle_statement_processing(
-    data: StatementRequest, result: Any
-) -> Tuple[dict, int]:
+def handle_statement_processing(data: StatementRequest, result: Any) -> Tuple[dict, int]:
     """Process statement and handle any errors"""
-    request_id = getattr(g, "request_id", str(uuid.uuid4()))
-    logger.info(f"Processing statement request {request_id}")
     try:
         return (
             StatementResponse(
@@ -117,7 +98,7 @@ def handle_statement_processing(
             200,
         )
     except ValueError as ve:
-        logger.error(f"Validation error for request {request_id}: {str(ve)}")
+        logger.error(f"Validation error: {str(ve)}")
         return (
             StatementResponse(
                 status="error", message="Validation error", error=str(ve)
@@ -125,7 +106,7 @@ def handle_statement_processing(
             400,
         )
     except Exception as e:
-        logger.error(f"Unexpected error for request {request_id}: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}")
         return (
             StatementResponse(
                 status="error", message="Internal server error", error=str(e)
@@ -136,31 +117,17 @@ def handle_statement_processing(
 
 def validate_json_request(f):
     """Decorator to validate JSON requests"""
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not request.is_json:
             return create_error_response("Content-Type must be application/json", 400)
         return f(*args, **kwargs)
-
     return decorated_function
-
-
-@app.before_request
-def before_request():
-    """Set request ID for tracking"""
-    g.request_id = str(uuid.uuid4())
-    logger.info("Processing request")
 
 
 @app.route("/health", methods=["GET"])
 def health_check() -> Tuple[Dict[str, Any], int]:
-    """
-    Health check endpoint that returns service status
-
-    Returns:
-        Tuple[Dict[str, Any], int]: JSON response with health status and HTTP code
-    """
+    """Health check endpoint that returns service status"""
     dependencies_healthy = check_dependencies()
     response = HealthResponse(
         status="healthy" if dependencies_healthy else "degraded",
@@ -173,7 +140,6 @@ def health_check() -> Tuple[Dict[str, Any], int]:
 
 @app.route("/process-statement", methods=["POST"])
 @validate_json_request
-@limiter.limit(settings.RATE_LIMIT_HOUR)
 def process_ib_statement():
     """Process IB statement from CSV content"""
     try:
@@ -184,7 +150,6 @@ def process_ib_statement():
             logger.info(f"Processing file: {tmp_file_path}")
             result = process_statement(tmp_file_path.as_posix())
             return handle_statement_processing(data, result)
-
     except ValidationError as e:
         logger.error(f"Validation error: {str(e)}")
         return create_error_response(str(e), 400)

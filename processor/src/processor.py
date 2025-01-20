@@ -223,10 +223,6 @@ class IBStatementProcessor:
         df_date = pd.DataFrame([[self.part_date]], columns=[DATA_DATE_PART_COL])
         db_manager.dataframe_to_sql(df_date, MASTER_DATES_TABLE)
 
-        metrics_df = pd.DataFrame([self.metrics])
-        metrics_df[DATA_DATE_PART_COL] = self.part_date
-        db_manager.dataframe_to_sql(metrics_df, METRICS)
-
 
 def process_statement(input_file: str) -> IBStatementProcessor:
     """

@@ -56,9 +56,9 @@ DATA_DATE_PART_COL: Final = "data_date_part"
 PRIOR_QUANTITY_COL: Final = "prior_quantity"
 CURRENT_QUANTITY_COL: Final = "current_quantity"
 PRIOR_PRICE_COL: Final = "prior_price"
-CURRENT_PRICE_COL: Final = ("current_price",)
-MARKET_PL_POS: Final = ("mark-to-market_p/l_position",)
-MARKET_PL_TRANS: Final = ("mark-to-market_p/l_transaction",)
+CURRENT_PRICE_COL: Final = "current_price"
+MARKET_PL_POS: Final = "mark-to-market_p/l_position"
+MARKET_PL_TRANS: Final = "mark-to-market_p/l_transaction"
 IS_NEW_COL: Final = "is_new"
 PL_DELTA_COL: Final = "pl_delta"
 

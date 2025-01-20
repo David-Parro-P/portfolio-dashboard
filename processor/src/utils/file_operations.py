@@ -37,18 +37,30 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
 
 
 def validate_input_file(input_file: str) -> str:
-    """Validates input file name and returns the input date."""
-    try:
-        # Daily report pattern (basic report)
-        input_date = input_file.split(".")[0].split("_")[-1]
-        if not (len(input_date) == 8 and input_date.isdigit()):
-            raise ValueError
-    except:
+    """
+    Validates input file name and returns the input date.
+    Tries different patterns to extract an 8-digit date from the filename.
+    """
+    def is_valid_date(date_str: str) -> bool:
+        return len(date_str) == 8 and date_str.isdigit()
+
+    def try_extract_date(file_name: str, pattern_func) -> str | None:
         try:
-            # Daily report pattern (custom report)
-            input_date = input_file.split(".")[2]
-            if not (len(input_date) == 8 and input_date.isdigit()):
-                raise ValueError
+            date = pattern_func(file_name)
+            return date if is_valid_date(date) else None
         except:
-            raise ValueError("date could not be extracted from filename: {input_file}")
-    return input_date
+            return None
+
+    # List of patterns to try
+    patterns = [
+        lambda f: f.split(".")[0].split("_")[-1],  # Daily report (basic)
+        lambda f: f.split(".")[2],                 # Daily report (custom)
+        lambda f: f.split(".")[1],                 # Fallback pattern
+    ]
+
+    for pattern in patterns:
+        date = try_extract_date(input_file, pattern)
+        if date:
+            return date
+
+    raise ValueError(f"date could not be extracted from filename: {input_file}")

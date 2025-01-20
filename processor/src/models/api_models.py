@@ -1,10 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-
+from pydantic import BaseModel
+from typing import Optional, Literal
 
 class HealthResponse(BaseModel):
-    status: str = Field("healthy", const=True)
-    service: str = Field("ibkr-processor", const=True)
+    status: Literal["healthy"] = "healthy"
+    service: Literal["ibkr-processor"] = "ibkr-processor"
 
 
 class StatementRequest(BaseModel):
