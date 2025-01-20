@@ -211,16 +211,18 @@ class IBStatementProcessor:
                 df[DATA_DATE_PART_COL] = self.part_date
 
     def export(self) -> None:
-        """Export processed data to SQLite database."""
+        """Export processed data to SQLite database with dates in ISO format."""
         db_manager = DatabaseManager(DB_PATH)
+        
         for key, df in self.export_data.items():
             if not df.empty:
                 if DATA_DATE_PART_COL in df.columns:
-                    df[DATA_DATE_PART_COL] = pd.to_datetime(df[DATA_DATE_PART_COL])
+                    df[DATA_DATE_PART_COL] = pd.to_datetime(df[DATA_DATE_PART_COL]).dt.date
 
                 db_manager.dataframe_to_sql(df, key)
 
-        df_date = pd.DataFrame([[self.part_date]], columns=[DATA_DATE_PART_COL])
+        formatted_date = pd.to_datetime(self.part_date).date()
+        df_date = pd.DataFrame([[formatted_date]], columns=[DATA_DATE_PART_COL])
         db_manager.dataframe_to_sql(df_date, MASTER_DATES_TABLE)
 
 
