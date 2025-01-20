@@ -2,7 +2,6 @@ import sqlite3
 import pandas as pd
 from pathlib import Path
 import os
-# TODO revision rapida
 class DatabaseManager:
     def __init__(self, db_path: str):
         """Initialize database connection."""

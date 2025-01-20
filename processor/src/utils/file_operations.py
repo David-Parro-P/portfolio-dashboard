@@ -11,7 +11,6 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
     with open(file_path, "r") as f:
         lines = f.readlines()
 
-    # TODO revisar este tipados
     sections: Dict[str, List[str]] = {}
     for line in lines:
         if line.startswith('"'):
@@ -34,29 +33,19 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
             pass
     return dataframes
 
-def save_sections(dataframes: Dict[str, pd.DataFrame], output_dir: str):
-    # TODO donde se usa esto? borrar?
-    """Saves each section DataFrame to a separate CSV file."""
-    os.makedirs(output_dir, exist_ok=True)
-
-    for section_name, df in dataframes.items():
-        safe_name = "".join(c if c.isalnum() else "_" for c in section_name)
-        file_path = os.path.join(output_dir, f"{safe_name}.csv")
-        df.to_csv(file_path, index=False)
-        print(f"Saved {section_name} to {file_path}")
-
 def validate_input_file(input_file: str) -> str:
-    # TODO mejorar el error d salida
     """Validates input file name and returns the input date."""
     try:
+        # Daily report pattern (basic report)
         input_date = input_file.split(".")[0].split("_")[-1]
         if not (len(input_date) == 8 and input_date.isdigit()):
             raise ValueError
     except:
         try:
+            # Daily report pattern (custom report)
             input_date = input_file.split(".")[2]
             if not (len(input_date) == 8 and input_date.isdigit()):
-                raise ValueError
+                raise ValueError  
         except:
-            raise ValueError("UNEXPECTED FILE FORMAT")
+            raise ValueError("date could not be extracted from filename: {input_file}")
     return input_date

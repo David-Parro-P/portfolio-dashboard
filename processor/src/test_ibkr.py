@@ -52,21 +52,6 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
     return dataframes
 
 
-def save_sections(dataframes: Dict[str, pd.DataFrame], output_dir: str):
-    """
-    Saves each section DataFrame to a separate CSV file.
-    """
-    os.makedirs(output_dir, exist_ok=True)
-
-    for section_name, df in dataframes.items():
-        # Create safe filename
-        safe_name = "".join(c if c.isalnum() else "_" for c in section_name)
-        file_path = os.path.join(output_dir, f"{safe_name}.csv")
-
-        df.to_csv(file_path, index=False)
-        print(f"Saved {section_name} to {file_path}")
-
-
 def post_process_df(df):
     """
     Post-process DataFrame by:
