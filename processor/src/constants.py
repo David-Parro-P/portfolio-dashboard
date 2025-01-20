@@ -13,6 +13,8 @@ OPTION_TRADES: Final = "option_trades"
 STOCK_TRADES: Final = "stock_trades"
 TOTAL_PROCEEDS: Final = "total_proceeds"
 # Asset categories
+CAP_HEADER: Final = "Header"
+CAP_FOREX: Final = "Forex"
 CAP_STOCK: Final = "Stocks"
 CAP_OPTIONS: Final = "Equity and Index Options"
 # File patterns and formats
@@ -44,6 +46,14 @@ CURRENCY_COL: Final = "currency"
 ASSET_CATEGORY_COL: Final = "asset_category"
 PK_COL: Final = "pk"
 DATA_DATE_PART_COL: Final = "data_date_part"
+PRIOR_QUANTITY_COL: Final = "prior_quantity"
+CURRENT_QUANTITY_COL: Final = "current_quantity"
+PRIOR_PRICE_COL: Final = "prior_price"
+CURRENT_PRICE_COL: Final = "current_price",
+MARKET_PL_POS: Final = "mark-to-market_p/l_position",
+MARKET_PL_TRANS: Final = "mark-to-market_p/l_transaction",
+IS_NEW_COL: Final = "is_new"
+PL_DELTA_COL: Final = "pl_delta"
 
 
 

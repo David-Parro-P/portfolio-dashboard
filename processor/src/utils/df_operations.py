@@ -4,8 +4,22 @@ from typing import Tuple
 from constants import (
     DATE_FORMATS,
     SYMBOL_COL,
+    ASSET_CATEGORY_COL,
+    CAP_HEADER,
+    CAP_FOREX,
+    CAP_OPTIONS,
+    CAP_STOCK,
+    OPTIONS_TYPE,
+    FOREX_TYPE,
+    PRIOR_PRICE_COL,
+    CURRENT_PRICE_COL,
+    PRIOR_QUANTITY_COL,
+    CURRENT_QUANTITY_COL,
+    MARKET_PL_POS,
+    MARKET_PL_TRANS,
+    IS_NEW_COL,
+    PL_DELTA_COL
 )
-# TODO general de que tire de constantes
 
 def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
     """Cleans column names by converting to lowercase and replacing spaces with underscores."""
@@ -14,7 +28,7 @@ def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
 def post_process_df(df: pd.DataFrame) -> pd.DataFrame:
     """Post-processes DataFrame by removing headers and totals."""
     try:
-        header_indices = df[df["Header"] == "Header"].index
+        header_indices = df[df[CAP_HEADER] == CAP_HEADER].index
         if len(header_indices) > 0:
             last_header_idx = header_indices[-1]
             df = df.iloc[:last_header_idx]
@@ -71,46 +85,46 @@ def auto_convert_types(df: pd.DataFrame) -> pd.DataFrame:
 def create_base_tables(df_base_daily: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Creates base tables for stocks, options, and forex."""
     df_base = df_base_daily.assign(
-        prior_price=lambda x: pd.to_numeric(x["prior_price"], errors="coerce").fillna(0.0),
-        current_price=lambda x: pd.to_numeric(x["current_price"], errors="coerce").fillna(0.0),
-        is_new=lambda x: x["prior_quantity"] == 0,
+        prior_price=lambda x: pd.to_numeric(x[PRIOR_PRICE_COL], errors="coerce").fillna(0.0),
+        current_price=lambda x: pd.to_numeric(x[CURRENT_PRICE_COL], errors="coerce").fillna(0.0),
+        is_new=lambda x: x[PRIOR_QUANTITY_COL] == 0,
     )[
         [
-            "asset_category",
-            "symbol",
-            "prior_quantity",
-            "current_quantity",
-            "prior_price",
-            "current_price",
-            "mark-to-market_p/l_position",
-            "mark-to-market_p/l_transaction",
-            "is_new",
+            ASSET_CATEGORY_COL,
+            SYMBOL_COL,
+            PRIOR_QUANTITY_COL,
+            CURRENT_QUANTITY_COL,
+            PRIOR_PRICE_COL,
+            CURRENT_PRICE_COL,
+            MARKET_PL_POS,
+            MARKET_PL_TRANS,
+            IS_NEW_COL,
         ]
     ].rename(
         columns={
-            "mark-to-market_p/l_position": "pl_delta",
+            MARKET_PL_POS: PL_DELTA_COL,
         }
     )
     
     float_columns = df_base.select_dtypes(include=["float64"]).columns
     df_base[float_columns] = df_base[float_columns].round(2)
 
-    asset_categories = df_base["asset_category"].unique()
+    asset_categories = df_base[ASSET_CATEGORY_COL].unique()
     df_by_category = {
-        category: df_base.loc[lambda x: x["asset_category"] == category].copy()
+        category: df_base.loc[lambda x: x[ASSET_CATEGORY_COL] == category].copy()
         for category in asset_categories
     }
 
-    df_stocks = df_by_category.get("Stocks")
+    df_stocks = df_by_category.get(CAP_STOCK)
     if df_stocks is not None:
-        df_stocks["asset_category"] = df_stocks["asset_category"].str.lower()
+        df_stocks[ASSET_CATEGORY_COL] = df_stocks[ASSET_CATEGORY_COL].str.lower()
     
-    df_options = df_by_category.get("Equity and Index Options")
+    df_options = df_by_category.get(CAP_OPTIONS)
     if df_options is not None:
-        df_options["asset_category"] = "options"
+        df_options[ASSET_CATEGORY_COL] = OPTIONS_TYPE
     
-    df_forex = df_by_category.get("Forex")
+    df_forex = df_by_category.get(CAP_FOREX)
     if df_forex is not None:
-        df_forex["asset_category"] = "forex"
+        df_forex[ASSET_CATEGORY_COL] = FOREX_TYPE
     
     return df_stocks, df_options, df_forex
