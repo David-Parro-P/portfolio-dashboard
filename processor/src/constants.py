@@ -1,13 +1,22 @@
-from typing import Dict
+from typing import Dict, Final
 import os
 
-# TODO anadir tipo Final
 # File paths and directories
-PREFIX = "/mnt/c/Users/David/Downloads/output"
-DEFAULT_OUTPUT_DIR = "statement_sections"
+DEFAULT_OUTPUT_DIR: Final = "statement_sections"
 
+
+# Asset type values
+STOCKS_TYPE: Final = "stocks"
+OPTIONS_TYPE: Final = "options"
+FOREX_TYPE: Final = "forex"
+OPTION_TRADES: Final = "option_trades"
+STOCK_TRADES: Final = "stock_trades"
+TOTAL_PROCEEDS: Final = "total_proceeds"
+# Asset categories
+CAP_STOCK: Final = "Stocks"
+CAP_OPTIONS: Final = "Equity and Index Options"
 # File patterns and formats
-DATE_FORMATS = [
+DATE_FORMATS: Final = [
     '%Y-%m-%d',          # 2024-01-30
     '%Y-%m-%d %H:%M:%S', # 2024-01-30 15:30:00
     '%d%b%y',            # 30JAN24
@@ -16,46 +25,43 @@ DATE_FORMATS = [
 
 # Asset categories mapping
 ASSET_CATEGORY_REPLACE: Dict[str, str] = {
-    "Stocks": "stocks",
-    "Equity and Index Options": "options"
+    CAP_STOCK: STOCKS_TYPE,
+    CAP_OPTIONS: OPTIONS_TYPE
 }
 
 # DataFrame keys and columns
-MTM_SUMMARY_KEY = "Mark-to-Market Performance Summary"
-TRADES_KEY = "Trades"
+MTM_SUMMARY_KEY: Final = "Mark-to-Market Performance Summary"
+TRADES_KEY: Final = "Trades"
 
 # Default values
-DEFAULT_EXPIRY_DATE = "9999-01-01"
-DEFAULT_STRIKE = 0
-DEFAULT_CONTRACT_TYPE = "C"
+DEFAULT_EXPIRY_DATE: Final = "9999-01-01"
+DEFAULT_STRIKE: Final = 0
+DEFAULT_CONTRACT_TYPE: Final = "C"
 
 # Column names
-SYMBOL_COL = "symbol"
-CURRENCY_COL = "currency"
-ASSET_CATEGORY_COL = "asset_category"
-PK_COL = "pk"
-DATA_DATE_PART_COL = "data_date_part"
+SYMBOL_COL: Final = "symbol"
+CURRENCY_COL: Final = "currency"
+ASSET_CATEGORY_COL: Final = "asset_category"
+PK_COL: Final = "pk"
+DATA_DATE_PART_COL: Final = "data_date_part"
 
-# Asset type values
-STOCKS_TYPE = "stocks"
-OPTIONS_TYPE = "options"
-FOREX_TYPE = "forex"
+
 
 # DataFrame export mapping
-DF_EXPORT_MAPPING = {
-    "stocks": STOCKS_TYPE,
-    "options": OPTIONS_TYPE,
-    "options_trades": "options_trades",
-    "stock_traces": "stock_traces",
-    "total_proceeds": "total_proceeds",
-    "forex": FOREX_TYPE
+DF_EXPORT_MAPPING: Dict[str, str] = {
+    STOCKS_TYPE: STOCKS_TYPE,
+    OPTIONS_TYPE: OPTIONS_TYPE,
+    OPTION_TRADES: OPTION_TRADES,
+    STOCK_TRADES: STOCK_TRADES,
+    TOTAL_PROCEEDS: TOTAL_PROCEEDS,
+    FOREX_TYPE: FOREX_TYPE
 }
 
 # Master dates filename
 # TODO necesario?
-MASTER_DATES_FILE = "master_dates.csv"
+MASTER_DATES_FILE: Final = "master_dates.csv"
 
 # Options contract multiplier
-OPTIONS_CONTRACT_MULTIPLIER = 100
+OPTIONS_CONTRACT_MULTIPLIER: Final = 100
 
 DB_PATH = os.getenv('DB_PATH', '/app/db/statements.db')
