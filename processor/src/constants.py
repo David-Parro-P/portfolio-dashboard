@@ -1,6 +1,9 @@
 from typing import Dict, Final
 import os
 
+# MAster date table
+MASTER_DATES_TABLE: Final = "master_dates"
+METRICS: Final = "metrics"
 # Input N8N request body fields
 CSV_CONTENT: Final = "csv_content"
 SUBJECT: Final = "subject"

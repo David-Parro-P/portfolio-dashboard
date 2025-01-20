@@ -56,7 +56,7 @@ def create_error_response(message: str, status_code: int) -> Tuple[Dict[str, Any
         jsonify(
             {
                 "error": message,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(datetime.timezone.utc).isoformat(),
                 "request_id": getattr(g, "request_id", str(uuid.uuid4())),
             }
         ),
@@ -81,7 +81,6 @@ def temp_csv_file(content: str, date_str: str) -> Generator[Path, None, None]:
 def check_dependencies() -> bool:
     """Check if all critical dependencies are healthy"""
     try:
-        # Add checks for critical dependencies (database, external services, etc.)
         return True
     except Exception as e:
         logger.error(f"Dependency check failed: {str(e)}")
