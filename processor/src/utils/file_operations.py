@@ -11,9 +11,8 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
     with open(file_path, "r") as f:
         lines = f.readlines()
 
+    # TODO revisar este tipados
     sections: Dict[str, List[str]] = {}
-    current_section = None
-
     for line in lines:
         if line.startswith('"'):
             section_name = line[1:line.find('"', 1)]
@@ -36,6 +35,7 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
     return dataframes
 
 def save_sections(dataframes: Dict[str, pd.DataFrame], output_dir: str):
+    # TODO donde se usa esto? borrar?
     """Saves each section DataFrame to a separate CSV file."""
     os.makedirs(output_dir, exist_ok=True)
 
@@ -46,6 +46,7 @@ def save_sections(dataframes: Dict[str, pd.DataFrame], output_dir: str):
         print(f"Saved {section_name} to {file_path}")
 
 def validate_input_file(input_file: str) -> str:
+    # TODO mejorar el error d salida
     """Validates input file name and returns the input date."""
     try:
         input_date = input_file.split(".")[0].split("_")[-1]

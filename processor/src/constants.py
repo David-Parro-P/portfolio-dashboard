@@ -1,6 +1,7 @@
 from typing import Dict
 import os
 
+# TODO anadir tipo Final
 # File paths and directories
 PREFIX = "/mnt/c/Users/David/Downloads/output"
 DEFAULT_OUTPUT_DIR = "statement_sections"
@@ -51,6 +52,7 @@ DF_EXPORT_MAPPING = {
 }
 
 # Master dates filename
+# TODO necesario?
 MASTER_DATES_FILE = "master_dates.csv"
 
 # Options contract multiplier

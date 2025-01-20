@@ -7,7 +7,7 @@ from datetime import datetime
 
 asset_category_replace = {"Stocks": "stocks", "Equity and Index Options": "options"}
 
-
+# TODO corregir el otro fichero y borrar este
 def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
     """
     Splits an Interactive Brokers CSV statement into separate DataFrames for each section.

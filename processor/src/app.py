@@ -8,6 +8,7 @@ app = Flask(__name__)
 @app.route('/health', methods=['GET'])
 def health_check():
     """Simple health check endpoint"""
+    # TODO anadir a modelo e pydantic
     return jsonify({
         "status": "healthy",
         "service": "ibkr-processor"
@@ -15,6 +16,7 @@ def health_check():
 
 @app.route('/process-statement', methods=['POST'])
 def process_ib_statement():
+    # TODO quitar constantes
     """
     Process IB statement from CSV content
     Expected JSON body: {
@@ -29,10 +31,14 @@ def process_ib_statement():
         data = request.get_json()
         
         if 'csv_content' not in data:
+            # TODO anadir a modelo e pydantic
             return jsonify({"error": "Missing required fields: csv_content"}), 400
         if 'subject' not in data:
+            # TODO anadir a modelo e pydantic
             return jsonify({"error": "Missing required fields: subject"}), 400
-
+        
+        # TODO simplificar logica o sacarla a otro lado
+        # TODO corregir loggers
         subject = data['subject']
         date_str = subject.split(" ")[-1]
         parsed_date = datetime.strptime(date_str, '%m/%d/%Y').strftime('%Y%m%d')
@@ -46,15 +52,11 @@ def process_ib_statement():
         with open(tmp_file_path, 'w', encoding='utf-8') as tmp_file:
             csv_content = data['csv_content'].replace('\ufeff', '')
             tmp_file.write(csv_content)
-            print("DONE")
-        with open(tmp_file_path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-            print(f"Number of lines written: {len(lines)}")
-            print(f"First few lines: {lines[:3]}")
-        
+
         app.logger.info(f"tmp file created {tmp_file_path}")
         processor = process_statement(tmp_file_path.as_posix())
        
+       # TODO anadir a modelo e pydantic
         app.logger.info(f"file processed")
         response = {
             "status": "success",
@@ -65,6 +67,7 @@ def process_ib_statement():
 
     except Exception as e:
         app.logger.error(f"Error processing statement: {str(e)}")
+        # TODO anadir a modelo e pydantic
         return jsonify({
             "error": str(e),
             "status": "error",

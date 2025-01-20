@@ -5,6 +5,7 @@ from constants import (
     DATE_FORMATS,
     SYMBOL_COL,
 )
+# TODO general de que tire de constantes
 
 def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
     """Cleans column names by converting to lowercase and replacing spaces with underscores."""

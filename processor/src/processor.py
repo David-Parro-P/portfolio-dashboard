@@ -33,6 +33,7 @@ from utils.df_operations import (
 from utils.db_operations import DatabaseManager
 
 class IBStatementProcessor:
+    # TODO refactor
     def __init__(self, input_file: str):
         """Initialize the processor with input file."""
         self.input_file = input_file
@@ -79,12 +80,13 @@ class IBStatementProcessor:
             
         # Process forex
         if df_forex is not None:
+            # TODO que tire de constantes
             df_forex = (
                 df_forex.rename(columns={"symbol": "currency", "prior_price": "exchange_rate_eur"})
                 [['asset_category', 'currency', 'prior_quantity', 'current_quantity', 
                   'exchange_rate_eur', 'pl_delta']]
             )
-        
+        # TODO que tire de constantes
         self.processed_data.update({
             'stocks': df_stocks,
             'options': df_options,
@@ -155,7 +157,7 @@ class IBStatementProcessor:
             )
             .loc[lambda df: df['header'] == 'Data']
         )
-        
+        # TODO que tire de constantes
         stock_trades = trades_df[trades_df[ASSET_CATEGORY_COL] == "stocks"]
         options_trades = trades_df[trades_df[ASSET_CATEGORY_COL] == "options"]
         options_trades = parse_option_symbol(options_trades)
@@ -163,6 +165,7 @@ class IBStatementProcessor:
         return stock_trades, options_trades
     
     def _initialize_empty_trades(self) -> None:
+        # TODO que tire de constantes
         """Initialize empty DataFrames when no trades are present."""
         self.processed_data.update({
             'options_trades': pd.DataFrame(),
@@ -171,6 +174,7 @@ class IBStatementProcessor:
         })
     
     def _calculate_metrics(self) -> None:
+        # TODO que tire de constantes
         """Calculate various portfolio metrics."""
         df_stocks = self.processed_data['stocks']
         df_options = self.processed_data['options']
@@ -217,6 +221,7 @@ class IBStatementProcessor:
                 df[DATA_DATE_PART_COL] = self.part_date
     
     def export(self) -> None:
+        # TODO que tire de constantes
         """Export processed data to SQLite database."""
         
         
@@ -244,6 +249,7 @@ class IBStatementProcessor:
         db_manager.dataframe_to_sql(metrics_df, 'metrics')
     
     def get_metrics(self) -> Dict:
+        # TODO necesario? como van las metricas en grafana?
         """Return calculated metrics."""
         return self.metrics
 
@@ -261,4 +267,5 @@ def process_statement(input_file: str) -> IBStatementProcessor:
     processor = IBStatementProcessor(input_file)
     processor.process()
     processor.export()
+    # TODO que queremos retornar exactamente
     return processor
