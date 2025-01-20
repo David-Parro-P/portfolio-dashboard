@@ -1,6 +1,10 @@
 from typing import Dict, Final
 import os
 
+# Input N8N request body fields
+CSV_CONTENT: Final = "csv_content"
+SUBJECT: Final = "subject"
+
 # File paths and directories
 DEFAULT_OUTPUT_DIR: Final = "statement_sections"
 
@@ -19,16 +23,16 @@ CAP_STOCK: Final = "Stocks"
 CAP_OPTIONS: Final = "Equity and Index Options"
 # File patterns and formats
 DATE_FORMATS: Final = [
-    '%Y-%m-%d',          # 2024-01-30
-    '%Y-%m-%d %H:%M:%S', # 2024-01-30 15:30:00
-    '%d%b%y',            # 30JAN24
-    '%m/%d/%Y'           # 01/30/2024
+    "%Y-%m-%d",  # 2024-01-30
+    "%Y-%m-%d %H:%M:%S",  # 2024-01-30 15:30:00
+    "%d%b%y",  # 30JAN24
+    "%m/%d/%Y",  # 01/30/2024
 ]
 
 # Asset categories mapping
 ASSET_CATEGORY_REPLACE: Dict[str, str] = {
     CAP_STOCK: STOCKS_TYPE,
-    CAP_OPTIONS: OPTIONS_TYPE
+    CAP_OPTIONS: OPTIONS_TYPE,
 }
 
 # DataFrame keys and columns
@@ -49,12 +53,11 @@ DATA_DATE_PART_COL: Final = "data_date_part"
 PRIOR_QUANTITY_COL: Final = "prior_quantity"
 CURRENT_QUANTITY_COL: Final = "current_quantity"
 PRIOR_PRICE_COL: Final = "prior_price"
-CURRENT_PRICE_COL: Final = "current_price",
-MARKET_PL_POS: Final = "mark-to-market_p/l_position",
-MARKET_PL_TRANS: Final = "mark-to-market_p/l_transaction",
+CURRENT_PRICE_COL: Final = ("current_price",)
+MARKET_PL_POS: Final = ("mark-to-market_p/l_position",)
+MARKET_PL_TRANS: Final = ("mark-to-market_p/l_transaction",)
 IS_NEW_COL: Final = "is_new"
 PL_DELTA_COL: Final = "pl_delta"
-
 
 
 # DataFrame export mapping
@@ -64,14 +67,10 @@ DF_EXPORT_MAPPING: Dict[str, str] = {
     OPTION_TRADES: OPTION_TRADES,
     STOCK_TRADES: STOCK_TRADES,
     TOTAL_PROCEEDS: TOTAL_PROCEEDS,
-    FOREX_TYPE: FOREX_TYPE
+    FOREX_TYPE: FOREX_TYPE,
 }
-
-# Master dates filename
-# TODO necesario?
-MASTER_DATES_FILE: Final = "master_dates.csv"
 
 # Options contract multiplier
 OPTIONS_CONTRACT_MULTIPLIER: Final = 100
 
-DB_PATH = os.getenv('DB_PATH', '/app/db/statements.db')
+DB_PATH = os.getenv("DB_PATH", "/app/db/statements.db")

@@ -1,8 +1,10 @@
 """File operations utilities for IB statement processing."""
+
 import os
 from typing import Dict, List
 import pandas as pd
 from io import StringIO
+
 
 def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
     """
@@ -14,11 +16,11 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
     sections: Dict[str, List[str]] = {}
     for line in lines:
         if line.startswith('"'):
-            section_name = line[1:line.find('"', 1)]
-            rest_of_line = line[line.find('"', 1) + 1:]
+            section_name = line[1 : line.find('"', 1)]
+            rest_of_line = line[line.find('"', 1) + 1 :]
         else:
-            section_name = line[:line.find(",")]
-            rest_of_line = line[line.find(",") + 1:]
+            section_name = line[: line.find(",")]
+            rest_of_line = line[line.find(",") + 1 :]
 
         if section_name not in sections:
             sections[section_name] = []
@@ -33,6 +35,7 @@ def split_ib_statement(file_path: str) -> Dict[str, pd.DataFrame]:
             pass
     return dataframes
 
+
 def validate_input_file(input_file: str) -> str:
     """Validates input file name and returns the input date."""
     try:
@@ -45,7 +48,7 @@ def validate_input_file(input_file: str) -> str:
             # Daily report pattern (custom report)
             input_date = input_file.split(".")[2]
             if not (len(input_date) == 8 and input_date.isdigit()):
-                raise ValueError  
+                raise ValueError
         except:
             raise ValueError("date could not be extracted from filename: {input_file}")
     return input_date

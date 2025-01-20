@@ -2,12 +2,14 @@ import sqlite3
 import pandas as pd
 from pathlib import Path
 import os
+
+
 class DatabaseManager:
     def __init__(self, db_path: str):
         """Initialize database connection."""
         self.db_path = db_path
         Path(os.path.dirname(db_path)).mkdir(parents=True, exist_ok=True)
-        
+
     def dataframe_to_sql(self, df: pd.DataFrame, table_name: str) -> None:
         """
         Write DataFrame to SQLite table, create if doesn't exist
@@ -15,11 +17,6 @@ class DatabaseManager:
         """
         if df.empty:
             return None
-            
+
         with sqlite3.connect(self.db_path) as conn:
-            df.to_sql(
-                name=table_name,
-                con=conn,
-                if_exists='append',
-                index=False
-            )
+            df.to_sql(name=table_name, con=conn, if_exists="append", index=False)
