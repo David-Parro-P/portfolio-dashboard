@@ -34,7 +34,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./processor
-        run: poetry install
+        run: poetry install --no-root
         
       - name: Run tests
         working-directory: ./processor
