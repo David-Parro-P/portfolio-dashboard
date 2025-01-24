@@ -62,9 +62,7 @@ jobs:
         with:
           context: ./processor
           push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}-processor:${GITHUB_SHA::7}
-            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}-processor:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}-processor:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}-processor:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}-processor:buildcache,mode=max
           
