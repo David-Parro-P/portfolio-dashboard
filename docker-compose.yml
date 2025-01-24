@@ -12,7 +12,7 @@ services:
     ports:
       - "5678:5678"
     volumes:
-      - ./data/.n8n:/home/node/.n8n
+      - /opt/statement-analytics/data/.n8n:/home/node/.n8n
     restart: unless-stopped
     networks:
       - statement-network
@@ -21,8 +21,8 @@ services:
     build:
       context: ./processor
     volumes:
-      - ./data/db:/app/db:rw
-      - ./output:/app/output:rw 
+      - /opt/statement-analytics/data/db:/app/db:rw
+      - /opt/statement-analytics/output:/app/output:rw 
     environment:
       - DB_PATH=/app/db/statements.db
       - OUTPUT_DIR=/app/output
@@ -40,8 +40,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./data/db:/data:ro
-      - ./data/metabase:/metabase-data
+      - /opt/statement-analytics/data/db:/data:ro
+      - /opt/statement-analytics/data/metabase:/metabase-data
     environment:
       - MB_DB_FILE=/metabase-data/metabase.db
       - MB_DB_TYPE=h2
