@@ -38,7 +38,7 @@ services:
   metabase:
     image: metabase/metabase:latest
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       - /opt/statement-analytics/data/db:/data:ro
       - /opt/statement-analytics/data/metabase:/metabase-data
