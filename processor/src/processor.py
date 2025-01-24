@@ -5,6 +5,7 @@ This module handles the processing of IB statements and exports the processed da
 
 from datetime import datetime
 import pandas as pd
+from typing import Tuple
 
 from constants import (
     MTM_SUMMARY_KEY,
@@ -33,7 +34,7 @@ from constants import (
     TOTAL_PROCEEDS,
     DB_PATH,
     MASTER_DATES_TABLE,
-    METRICS,
+    ASSET_CATEGORY_REPLACE
 )
 
 from utils.file_operations import split_ib_statement, validate_input_file
@@ -96,6 +97,25 @@ class IBStatementProcessor:
         self.processed_data.update(
             {STOCKS_TYPE: df_stocks, OPTIONS_TYPE: df_options, FOREX_TYPE: df_forex}
         )
+
+    def _separate_trades(self, trades_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Separate trades into stocks and options."""
+        trades_df = (
+            trades_df
+            .pipe(clean_column_names)
+            .assign(
+                asset_category=lambda df: (
+                    df[ASSET_CATEGORY_COL].replace(ASSET_CATEGORY_REPLACE)
+                )
+            )
+            .loc[lambda df: df['header'] == 'Data']
+        )
+        
+        stock_trades = trades_df[trades_df[ASSET_CATEGORY_COL] == "stocks"]
+        options_trades = trades_df[trades_df[ASSET_CATEGORY_COL] == "options"]
+        options_trades = parse_option_symbol(options_trades)
+        
+        return stock_trades, options_trades
 
     def _process_trades(self) -> None:
         """Process trades data."""
@@ -204,7 +224,7 @@ class IBStatementProcessor:
             if key in DF_EXPORT_MAPPING
         }
 
-        for key, df in self.export_data.items():
+        for _, df in self.export_data.items():
             if not df.empty:
                 key_column = SYMBOL_COL if SYMBOL_COL in df.columns else CURRENCY_COL
                 df[PK_COL] = df[key_column] + "_" + self.input_date
@@ -218,7 +238,7 @@ class IBStatementProcessor:
             if not df.empty:
                 if DATA_DATE_PART_COL in df.columns:
                     df[DATA_DATE_PART_COL] = pd.to_datetime(df[DATA_DATE_PART_COL]).dt.date
-
+                print(key)
                 db_manager.dataframe_to_sql(df, key)
 
         formatted_date = pd.to_datetime(self.part_date).date()
