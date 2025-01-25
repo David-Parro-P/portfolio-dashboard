@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  n8n:
+    volumes:
+      - /opt/statement-analytics/data/.n8n:/home/node/.n8n
+
+  processor:
+    image: ${DOCKER_USERNAME}/statement-analytics-processor:latest
+    volumes:
+      - /opt/statement-analytics/data/db:/app/db:rw
+      - /opt/statement-analytics/output:/app/output:rw
+
+  metabase:
+    volumes:
+      - /opt/statement-analytics/data/db:/data:ro
+      - /opt/statement-analytics/data/metabase:/metabase-data
+
+volumes:
+  metabase-data:
+    driver: local
