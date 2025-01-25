@@ -76,6 +76,7 @@ jobs:
         - uses: actions/checkout@v3
         - name: Create .env file
           run: |
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
             echo "N8N_USER=${{ secrets.N8N_USER }}" >> .env
             echo "N8N_PASSWORD=${{ secrets.N8N_PASSWORD }}" >> .env
             echo "METABASE_ADMIN_EMAIL=${{ secrets.METABASE_ADMIN_EMAIL }}" >> .env
