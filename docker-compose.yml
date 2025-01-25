@@ -18,8 +18,7 @@ services:
       - statement-network
 
   processor:
-    build:
-      context: ./processor
+    image: ${DOCKER_USERNAME}/statement-analytics-processor:latest
     volumes:
       - /opt/statement-analytics/data/db:/app/db:rw
       - /opt/statement-analytics/output:/app/output:rw 
@@ -51,11 +50,6 @@ services:
       - MB_APPLICATION_NAME=StatementAnalytics
       - MB_ADMIN_EMAIL=${METABASE_ADMIN_EMAIL}
       - MB_ADMIN_PASSWORD=${METABASE_ADMIN_PASSWORD}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     restart: unless-stopped
     networks:
       - statement-network
