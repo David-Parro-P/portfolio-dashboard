@@ -89,6 +89,15 @@ jobs:
             key: ${{ secrets.SSH_PRIVATE_KEY }}
             source: ".env"
             target: "/opt/statement-analytics"
+  
+        - name: Copy files to VPS
+          uses: appleboy/scp-action@master
+          with:
+            host: ${{ secrets.DROPLET_HOST }}
+            username: ${{ secrets.DROPLET_USERNAME }}
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            source: ".env,docker-compose.yml,docker-compose.prod.yml"
+            target: "/opt/statement-analytics"
         
         - name: Deploy to DigitalOcean Droplet
           uses: appleboy/ssh-action@master
