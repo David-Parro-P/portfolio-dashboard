@@ -1,6 +1,6 @@
 services:
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:1.76.1
     user: "node"
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
@@ -36,7 +36,7 @@ services:
     networks:
       - statement-network
   metabase:
-    image: metabase/metabase:latest
+    image: metabase/metabase:v0.52.7.3
     ports:
       - "3001:3000"
     volumes:
