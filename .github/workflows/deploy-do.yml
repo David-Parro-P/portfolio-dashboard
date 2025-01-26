@@ -92,6 +92,7 @@ jobs:
           echo "N8N_PASSWORD=${{ secrets.N8N_PASSWORD }}" >> .env
           echo "METABASE_ADMIN_EMAIL=${{ secrets.METABASE_ADMIN_EMAIL }}" >> .env
           echo "METABASE_ADMIN_PASSWORD=${{ secrets.METABASE_ADMIN_PASSWORD }}" >> .env
+          echo "N8N_ENCRYPTION_KEY"=${{ secrets.N8N_ENCRYPTION_KEY }} >> .env
 
       - name: Copy deployment files
         uses: appleboy/scp-action@master
