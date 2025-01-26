@@ -18,6 +18,23 @@ services:
     restart: unless-stopped
     networks:
       - statement-network
+  processor:
+    build:
+      context: ./processor
+    volumes:
+      - /opt/statement-analytics/data/db:/app/db:rw
+      - /opt/statement-analytics/output:/app/output:rw 
+    environment:
+      - DB_PATH=/app/db/statements.db
+      - OUTPUT_DIR=/app/output
+      - FLASK_ENV=production
+      - FLASK_APP=src/app.py
+      - PYTHONPATH=/app/src
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - statement-network
   metabase:
     image: metabase/metabase:latest
     ports:
