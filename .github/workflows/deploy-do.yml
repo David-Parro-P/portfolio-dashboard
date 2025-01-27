@@ -91,6 +91,7 @@ jobs:
         run: |
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> .env
           echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+          echo "N8N_HOST=${{ secrets.HETZNER_HOST }}" >> .env
           echo "N8N_USER=${{ secrets.N8N_USER }}" >> .env
           echo "N8N_PASSWORD=${{ secrets.N8N_PASSWORD }}" >> .env
           echo "METABASE_ADMIN_EMAIL=${{ secrets.METABASE_ADMIN_EMAIL }}" >> .env
