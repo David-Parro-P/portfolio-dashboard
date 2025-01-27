@@ -35,8 +35,7 @@ services:
       - statement-network
 
   processor:
-    build:
-      context: ./processor
+    image: ${DOCKER_USERNAME}/${IMAGE_NAME}-processor:latest
     volumes:
       - /opt/statement-analytics/data/db:/app/db:rw
       - /opt/statement-analytics/output:/app/output:rw 
