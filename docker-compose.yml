@@ -1,4 +1,19 @@
 services:
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - n8n
+      - processor
+      - metabase
+    restart: unless-stopped
+    networks:
+      - statement-network
   n8n:
     image: n8nio/n8n:1.76.1
     user: "node"
@@ -11,13 +26,14 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_SECURE_COOKIE=false
-    ports:
-      - "5678:5678"
+    expose:
+      - "5678"
     volumes:
       - /opt/statement-analytics/data/.n8n:/home/node/.n8n
     restart: unless-stopped
     networks:
       - statement-network
+
   processor:
     build:
       context: ./processor
@@ -30,15 +46,15 @@ services:
       - FLASK_ENV=production
       - FLASK_APP=src/app.py
       - PYTHONPATH=/app/src
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     restart: unless-stopped
     networks:
       - statement-network
   metabase:
     image: metabase/metabase:v0.52.7.3
     ports:
-      - "3001:3000"
+      - "3000:3000"
     volumes:
       - /opt/statement-analytics/data/db:/data:ro
       - /opt/statement-analytics/data/metabase:/metabase-data

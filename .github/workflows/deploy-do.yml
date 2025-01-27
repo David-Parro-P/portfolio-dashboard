@@ -76,14 +76,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Create deployment directory if not exists
+      - name: Create deployment directory structure
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HETZNER_HOST }}
           username: ${{ secrets.HETZNER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p ${{ env.DEPLOY_PATH }}
+            mkdir -p ${{ env.DEPLOY_PATH }}/nginx/conf.d
+            mkdir -p ${{ env.DEPLOY_PATH }}/nginx/ssl
             
       - name: Create .env file
         run: |
@@ -92,7 +93,12 @@ jobs:
           echo "N8N_PASSWORD=${{ secrets.N8N_PASSWORD }}" >> .env
           echo "METABASE_ADMIN_EMAIL=${{ secrets.METABASE_ADMIN_EMAIL }}" >> .env
           echo "METABASE_ADMIN_PASSWORD=${{ secrets.METABASE_ADMIN_PASSWORD }}" >> .env
-          echo "N8N_ENCRYPTION_KEY"=${{ secrets.N8N_ENCRYPTION_KEY }} >> .env
+          echo "N8N_ENCRYPTION_KEY=${{ secrets.N8N_ENCRYPTION_KEY }}" >> .env
+
+      - name: Create SSL certificates
+        run: |
+          echo "${{ secrets.SSL_CERTIFICATE }}" > certificate.crt
+          echo "${{ secrets.SSL_PRIVATE_KEY }}" > private.key
 
       - name: Copy deployment files
         uses: appleboy/scp-action@master
@@ -100,10 +106,22 @@ jobs:
           host: ${{ secrets.HETZNER_HOST }}
           username: ${{ secrets.HETZNER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".env,docker-compose.yml"
+          source: ".env,docker-compose.yml,nginx/conf.d/default.conf,certificate.crt,private.key"
           target: ${{ env.DEPLOY_PATH }}
           overwrite: true
-      
+
+      - name: Move SSL certificates
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+            mv certificate.crt nginx/ssl/
+            mv private.key nginx/ssl/
+            chmod 600 nginx/ssl/private.key
+            
       - name: Deploy to Hetzner
         uses: appleboy/ssh-action@master
         with:

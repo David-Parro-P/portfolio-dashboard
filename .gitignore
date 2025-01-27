@@ -182,3 +182,6 @@ data/db/*
 !data/db/
 !data/db/.gitkeep
 *.csv
+generate-certs.sh
+nginx/ssl/certificate.crt
+nginx/ssl/private.key
