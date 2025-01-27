@@ -82,12 +82,14 @@ jobs:
           host: ${{ secrets.HETZNER_HOST }}
           username: ${{ secrets.HETZNER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: IMAGE_NAME,DEPLOY_PATH
           script: |
             mkdir -p ${{ env.DEPLOY_PATH }}/nginx/conf.d
             mkdir -p ${{ env.DEPLOY_PATH }}/nginx/ssl
             
       - name: Create .env file
         run: |
+          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> .env
           echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
           echo "N8N_USER=${{ secrets.N8N_USER }}" >> .env
           echo "N8N_PASSWORD=${{ secrets.N8N_PASSWORD }}" >> .env
@@ -128,8 +130,10 @@ jobs:
           host: ${{ secrets.HETZNER_HOST }}
           username: ${{ secrets.HETZNER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: IMAGE_NAME
           script: |
             cd ${{ env.DEPLOY_PATH }}
+            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
             echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
             docker compose pull
             docker compose up -d
@@ -142,9 +146,35 @@ jobs:
           host: ${{ secrets.HETZNER_HOST }}
           username: ${{ secrets.HETZNER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: IMAGE_NAME,DEPLOY_PATH
           script: |
             cd ${{ env.DEPLOY_PATH }}
-            if ! docker compose ps --format json | grep -q "running"; then
+            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
+            if ! docker compose ps --quiet | grep -q .; then
               echo "Deployment verification failed: No containers are running"
+              docker compose logs
               exit 1
+            else
+              echo "Deployment successful: Containers are running"
+              docker compose ps
             fi
+
+      - name: Debug on Failure
+        if: failure()
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+            echo "Current directory contents:"
+            ls -la
+            echo "Docker Compose file contents:"
+            cat docker-compose.yml
+            echo "Environment file contents (secrets redacted):"
+            grep -v "PASSWORD\|KEY\|TOKEN" .env
+            echo "Docker Compose Status:"
+            docker compose ps
+            echo "Docker Compose Logs:"
+            docker compose logs
