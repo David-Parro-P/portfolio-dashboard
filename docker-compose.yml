@@ -26,6 +26,9 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_SECURE_COOKIE=false
+      - N8N_PROTOCOL=https
+      - N8N_PATH=/n8n/
+      - N8N_HOST=${N8N_HOST}
     expose:
       - "5678"
     volumes:
@@ -50,6 +53,7 @@ services:
     restart: unless-stopped
     networks:
       - statement-network
+
   metabase:
     image: metabase/metabase:v0.52.7.3
     ports:
