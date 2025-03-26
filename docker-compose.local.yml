@@ -1,0 +1,87 @@
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - n8n
+      - processor
+      - metabase
+    restart: unless-stopped
+    networks:
+      - statement-network
+  n8n:
+    image: n8nio/n8n:1.76.1
+    user: "node"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - NODE_ENV=production
+      - N8N_PATH_DATA=/home/node/.n8n
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_SECURE_COOKIE=false
+      - N8N_PROTOCOL=https
+      - N8N_PATH=/n8n/
+      - N8N_HOST=${N8N_HOST}
+    expose:
+      - "5678"
+    volumes:
+      - ./data/.n8n:/home/node/.n8n
+    restart: unless-stopped
+    networks:
+      - statement-network
+
+  processor:
+    build:
+      context: ./processor
+      dockerfile: Dockerfile
+    volumes:
+      - ./data/db:/app/db:rw
+      - ./output:/app/output:rw 
+    environment:
+      - DB_PATH=/app/db/statements.db
+      - OUTPUT_DIR=/app/output
+      - FLASK_ENV=production
+      - FLASK_APP=src/app.py
+      - PYTHONPATH=/app/src
+    expose:
+      - "5000"
+    restart: unless-stopped
+    networks:
+      - statement-network
+
+  metabase:
+    image: metabase/metabase:v0.52.7.3
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/db:/data:ro
+      - ./data/metabase:/metabase-data
+    environment:
+      - MB_DB_FILE=/metabase-data/metabase.db
+      - MB_DB_TYPE=h2
+      - JAVA_TIMEZONE=UTC
+      - JAVA_OPTS=-XX:+UseG1GC -XX:MaxRAMPercentage=75 -Xmx512m
+      - MB_EMOJI_IN_LOGS=false
+      - MB_APPLICATION_NAME=StatementAnalytics
+      - MB_ADMIN_EMAIL=${METABASE_ADMIN_EMAIL}
+      - MB_ADMIN_PASSWORD=${METABASE_ADMIN_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - statement-network
+    mem_limit: 768m
+    mem_reservation: 512m
+
+networks:
+  statement-network:
+    driver: bridge
+
+volumes:
+  metabase-data:
+    driver: local
