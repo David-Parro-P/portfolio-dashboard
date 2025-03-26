@@ -104,24 +104,16 @@ jobs:
          echo "${{ secrets.SSL_CERTIFICATE }}" > certificate.crt
          echo "${{ secrets.SSL_PRIVATE_KEY }}" > private.key
 
-     - name: Copy deployment files
+     - name: Copy all files including SSL certificates
        uses: appleboy/scp-action@master
        with:
          host: ${{ secrets.DEPLOY_HOST }}
          username: ${{ secrets.DEPLOY_USER }}
          key: ${{ secrets.SSH_PRIVATE_KEY }}
-         source: ".env,docker-compose.yml,nginx/conf.d/default.conf"
+         source: ".env,docker-compose.yml,nginx/conf.d/default.conf,certificate.crt,private.key"
          strip_components: 1
          target: "${{ env.DEPLOY_PATH }}"
-
-     - name: Copy SSL certificates
-       uses: appleboy/scp-action@master
-       with:
-         host: ${{ secrets.DEPLOY_HOST }}
-         username: ${{ secrets.DEPLOY_USER }}
-         key: ${{ secrets.SSH_PRIVATE_KEY }}
-         source: "certificate.crt,private.key"
-         target: "${{ env.DEPLOY_PATH }}/nginx/ssl"
+         overwrite: true
            
      - name: Deploy
        uses: appleboy/ssh-action@master
