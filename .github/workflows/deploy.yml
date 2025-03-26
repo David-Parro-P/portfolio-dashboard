@@ -21,11 +21,21 @@ jobs:
        with:
          python-version: '3.12'
          
-     - name: Install dependencies
-       working-directory: ./processor
+     - name: Cache Poetry dependencies
+       uses: actions/cache@v3
+       with:
+         path: ~/.cache/pypoetry
+         key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+         restore-keys: |
+           ${{ runner.os }}-poetry-
+         
+     - name: Install Poetry
        run: |
          curl -sSL https://install.python-poetry.org | python3 -
-         poetry install --no-root
+         
+     - name: Install dependencies
+       working-directory: ./processor
+       run: poetry install --no-root
        
      - name: Run tests
        working-directory: ./processor
@@ -55,8 +65,8 @@ jobs:
          context: ./processor
          push: true
          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-processor:latest
-         secrets: |
-           GIT_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+         cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-processor:buildcache
+         cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-processor:buildcache,mode=max
          
  deploy:
    needs: build-and-push
@@ -67,25 +77,70 @@ jobs:
    steps:
      - uses: actions/checkout@v3
 
+     - name: Create deployment directory structure
+       uses: appleboy/ssh-action@master
+       with:
+         host: ${{ secrets.DEPLOY_HOST }}
+         username: ${{ secrets.DEPLOY_USER }}
+         key: ${{ secrets.SSH_PRIVATE_KEY }}
+         envs: IMAGE_NAME,DEPLOY_PATH
+         script: |
+           mkdir -p ${{ env.DEPLOY_PATH }}/nginx/conf.d
+           mkdir -p ${{ env.DEPLOY_PATH }}/nginx/ssl
+           
+     - name: Create .env file
+       run: |
+         echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> .env
+         echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+         echo "N8N_HOST=${{ secrets.DEPLOY_HOST }}" >> .env
+         echo "N8N_USER=${{ secrets.N8N_USER }}" >> .env
+         echo "N8N_PASSWORD=${{ secrets.N8N_PASSWORD }}" >> .env
+         echo "METABASE_ADMIN_EMAIL=${{ secrets.METABASE_ADMIN_EMAIL }}" >> .env
+         echo "METABASE_ADMIN_PASSWORD=${{ secrets.METABASE_ADMIN_PASSWORD }}" >> .env
+         echo "N8N_ENCRYPTION_KEY=${{ secrets.N8N_ENCRYPTION_KEY }}" >> .env
+
+     - name: Create SSL certificates
+       run: |
+         echo "${{ secrets.SSL_CERTIFICATE }}" > certificate.crt
+         echo "${{ secrets.SSL_PRIVATE_KEY }}" > private.key
+
+     - name: Copy deployment files
+       uses: appleboy/ssh-action@master
+       with:
+         host: ${{ secrets.DEPLOY_HOST }}
+         username: ${{ secrets.DEPLOY_USER }}
+         key: ${{ secrets.SSH_PRIVATE_KEY }}
+         source: ".env,docker-compose.yml,nginx/conf.d/default.conf,certificate.crt,private.key"
+         target: ${{ env.DEPLOY_PATH }}
+         overwrite: true
+
+     - name: Move SSL certificates
+       uses: appleboy/ssh-action@master
+       with:
+         host: ${{ secrets.DEPLOY_HOST }}
+         username: ${{ secrets.DEPLOY_USER }}
+         key: ${{ secrets.SSH_PRIVATE_KEY }}
+         script: |
+           cd ${{ env.DEPLOY_PATH }}
+           mv certificate.crt nginx/ssl/
+           mv private.key nginx/ssl/
+           chmod 600 nginx/ssl/private.key
+           
      - name: Deploy
        uses: appleboy/ssh-action@master
        with:
-           host: ${{ secrets.DEPLOY_HOST }}
-           username: ${{ secrets.DEPLOY_USER }}
-           key: ${{ secrets.SSH_PRIVATE_KEY }}
-           envs: |
-               DEPLOY_PATH
-               IMAGE_NAME
-               DOCKER_USERNAME
-               DOCKER_TOKEN
-               N8N_USER
-               N8N_PASSWORD
-               METABASE_ADMIN_EMAIL
-               METABASE_ADMIN_PASSWORD
-               N8N_ENCRYPTION_KEY
-               SSL_CERTIFICATE
-               SSL_PRIVATE_KEY
-           script: ${{ secrets.DEPLOY_SCRIPT }}
+         host: ${{ secrets.DEPLOY_HOST }}
+         username: ${{ secrets.DEPLOY_USER }}
+         key: ${{ secrets.SSH_PRIVATE_KEY }}
+         envs: IMAGE_NAME
+         script: |
+           cd ${{ env.DEPLOY_PATH }}
+           export IMAGE_NAME="${{ env.IMAGE_NAME }}"
+           echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+           docker compose pull
+           docker compose up -d
+           docker system prune -f
+           docker logout
 
      - name: Verify Deployment
        uses: appleboy/ssh-action@master
@@ -94,7 +149,7 @@ jobs:
          username: ${{ secrets.DEPLOY_USER }}
          key: ${{ secrets.SSH_PRIVATE_KEY }}
          script: |
-           cd ${{ secrets.DEPLOY_PATH }}
+           cd ${{ env.DEPLOY_PATH }}
            if ! docker compose ps --quiet | grep -q .; then
              echo "Deployment verification failed"
              exit 1
