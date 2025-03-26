@@ -41,6 +41,7 @@ def validate_input_file(input_file: str) -> str:
     Validates input file name and returns the input date.
     Tries different patterns to extract an 8-digit date from the filename.
     """
+
     def is_valid_date(date_str: str) -> bool:
         return len(date_str) == 8 and date_str.isdigit()
 
@@ -54,8 +55,8 @@ def validate_input_file(input_file: str) -> str:
     # List of patterns to try
     patterns = [
         lambda f: f.split(".")[0].split("_")[-1],  # Daily report (basic)
-        lambda f: f.split(".")[2],                 # Daily report (custom)
-        lambda f: f.split(".")[1],                 # Fallback pattern
+        lambda f: f.split(".")[2],  # Daily report (custom)
+        lambda f: f.split(".")[1],  # Fallback pattern
     ]
 
     for pattern in patterns:

@@ -86,7 +86,9 @@ def parse_date_from_subject(subject: str) -> str:
         ) from e
 
 
-def handle_statement_processing(data: StatementRequest, result: Any) -> Tuple[dict, int]:
+def handle_statement_processing(
+    data: StatementRequest, result: Any
+) -> Tuple[dict, int]:
     """Process statement and handle any errors"""
     try:
         return (
@@ -117,11 +119,13 @@ def handle_statement_processing(data: StatementRequest, result: Any) -> Tuple[di
 
 def validate_json_request(f):
     """Decorator to validate JSON requests"""
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not request.is_json:
             return create_error_response("Content-Type must be application/json", 400)
         return f(*args, **kwargs)
+
     return decorated_function
 
 

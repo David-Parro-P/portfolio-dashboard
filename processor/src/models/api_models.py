@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, Literal
 
+
 class HealthResponse(BaseModel):
     status: Literal["healthy"] = "healthy"
     service: Literal["ibkr-processor"] = "ibkr-processor"

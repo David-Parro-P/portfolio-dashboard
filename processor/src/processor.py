@@ -34,7 +34,7 @@ from constants import (
     TOTAL_PROCEEDS,
     DB_PATH,
     MASTER_DATES_TABLE,
-    ASSET_CATEGORY_REPLACE
+    ASSET_CATEGORY_REPLACE,
 )
 
 from utils.file_operations import split_ib_statement, validate_input_file
@@ -98,23 +98,24 @@ class IBStatementProcessor:
             {STOCKS_TYPE: df_stocks, OPTIONS_TYPE: df_options, FOREX_TYPE: df_forex}
         )
 
-    def _separate_trades(self, trades_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def _separate_trades(
+        self, trades_df: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Separate trades into stocks and options."""
         trades_df = (
-            trades_df
-            .pipe(clean_column_names)
+            trades_df.pipe(clean_column_names)
             .assign(
                 asset_category=lambda df: (
                     df[ASSET_CATEGORY_COL].replace(ASSET_CATEGORY_REPLACE)
                 )
             )
-            .loc[lambda df: df['header'] == 'Data']
+            .loc[lambda df: df["header"] == "Data"]
         )
-        
+
         stock_trades = trades_df[trades_df[ASSET_CATEGORY_COL] == "stocks"]
         options_trades = trades_df[trades_df[ASSET_CATEGORY_COL] == "options"]
         options_trades = parse_option_symbol(options_trades)
-        
+
         return stock_trades, options_trades
 
     def _process_trades(self) -> None:
@@ -233,11 +234,13 @@ class IBStatementProcessor:
     def export(self) -> None:
         """Export processed data to SQLite database with dates in ISO format."""
         db_manager = DatabaseManager(DB_PATH)
-        
+
         for key, df in self.export_data.items():
             if not df.empty:
                 if DATA_DATE_PART_COL in df.columns:
-                    df[DATA_DATE_PART_COL] = pd.to_datetime(df[DATA_DATE_PART_COL]).dt.date
+                    df[DATA_DATE_PART_COL] = pd.to_datetime(
+                        df[DATA_DATE_PART_COL]
+                    ).dt.date
                 print(key)
                 db_manager.dataframe_to_sql(df, key)
 
